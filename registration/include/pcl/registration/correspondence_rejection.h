@@ -141,7 +141,8 @@ public:
   }
 
   /** \brief Abstract method for setting the source cloud */
-  virtual void setSourcePoints(pcl::PCLPointCloud2::ConstPtr /*cloud2*/)
+  virtual void
+  setSourcePoints(pcl::PCLPointCloud2::ConstPtr /*cloud2*/)
   {
     PCL_WARN("[pcl::registration::%s::setSourcePoints] This class does not require an "
              "input source cloud\n",
@@ -156,7 +157,8 @@ public:
   }
 
   /** \brief Abstract method for setting the source normals */
-  virtual void setSourceNormals(pcl::PCLPointCloud2::ConstPtr /*cloud2*/)
+  virtual void
+  setSourceNormals(pcl::PCLPointCloud2::ConstPtr /*cloud2*/)
   {
     PCL_WARN("[pcl::registration::%s::setSourceNormals] This class does not require "
              "input source normals\n",
@@ -170,7 +172,8 @@ public:
   }
 
   /** \brief Abstract method for setting the target cloud */
-  virtual void setTargetPoints(pcl::PCLPointCloud2::ConstPtr /*cloud2*/)
+  virtual void
+  setTargetPoints(pcl::PCLPointCloud2::ConstPtr /*cloud2*/)
   {
     PCL_WARN("[pcl::registration::%s::setTargetPoints] This class does not require an "
              "input target cloud\n",
@@ -185,7 +188,8 @@ public:
   }
 
   /** \brief Abstract method for setting the target normals */
-  virtual void setTargetNormals(pcl::PCLPointCloud2::ConstPtr /*cloud2*/)
+  virtual void
+  setTargetNormals(pcl::PCLPointCloud2::ConstPtr /*cloud2*/)
   {
     PCL_WARN("[pcl::registration::%s::setTargetNormals] This class does not require "
              "input target normals\n",
@@ -194,7 +198,7 @@ public:
 
 protected:
   /** \brief The name of the rejection method. */
-  std::string rejection_name_;
+  std::string rejection_name_{};
 
   /** \brief The input correspondences. */
   CorrespondencesConstPtr input_correspondences_;
@@ -250,8 +254,6 @@ public:
   , tree_(new pcl::search::KdTree<PointT>)
   , class_name_("DataContainer")
   , needs_normals_(needs_normals)
-  , target_cloud_updated_(true)
-  , force_no_recompute_(false)
   {}
 
   /** \brief Empty destructor */
@@ -381,8 +383,9 @@ public:
            "Normals are not set for the input and target point clouds");
     const NormalT& src = (*input_normals_)[corr.index_query];
     const NormalT& tgt = (*target_normals_)[corr.index_match];
-    return (double((src.normal[0] * tgt.normal[0]) + (src.normal[1] * tgt.normal[1]) +
-                   (src.normal[2] * tgt.normal[2])));
+    return (static_cast<double>((src.normal[0] * tgt.normal[0]) +
+                                (src.normal[1] * tgt.normal[1]) +
+                                (src.normal[2] * tgt.normal[2])));
   }
 
 private:
@@ -392,7 +395,7 @@ private:
   /** \brief The input transformed point cloud dataset */
   PointCloudPtr input_transformed_;
 
-  /** \brief The target point cloud datase. */
+  /** \brief The target point cloud dataset. */
   PointCloudConstPtr target_;
 
   /** \brief Normals to the input point cloud */
@@ -415,11 +418,11 @@ private:
 
   /** \brief Variable that stores whether we have a new target cloud, meaning we need to
    * pre-process it again. This way, we avoid rebuilding the kd-tree */
-  bool target_cloud_updated_;
+  bool target_cloud_updated_{true};
 
   /** \brief A flag which, if set, means the tree operating on the target cloud
    * will never be recomputed*/
-  bool force_no_recompute_;
+  bool force_no_recompute_{false};
 
   /** \brief Get a string representation of the name of this class. */
   inline const std::string&

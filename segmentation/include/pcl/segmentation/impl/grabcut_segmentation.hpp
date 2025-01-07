@@ -48,8 +48,8 @@ namespace pcl
 {
 
 template <>
-float squaredEuclideanDistance (const pcl::segmentation::grabcut::Color &c1,
-                                const pcl::segmentation::grabcut::Color &c2)
+inline float squaredEuclideanDistance (const pcl::segmentation::grabcut::Color &c1,
+                                       const pcl::segmentation::grabcut::Color &c2)
 {
   return ((c1.r-c2.r)*(c1.r-c2.r)+(c1.g-c2.g)*(c1.g-c2.g)+(c1.b-c2.b)*(c1.b-c2.b));
 }
@@ -318,7 +318,7 @@ GrabCut<PointT>::initGraph ()
     if (n_link.nb_links > 0)
     {
       const auto point_index = (*indices_) [i_point];
-      std::vector<float>::const_iterator weights_it  = n_link.weights.begin ();
+      auto weights_it  = n_link.weights.begin ();
       for (auto indices_it = n_link.indices.cbegin (); indices_it != n_link.indices.cend (); ++indices_it, ++weights_it)
       {
         if ((*indices_it != point_index) && (*indices_it != UNAVAILABLE))
