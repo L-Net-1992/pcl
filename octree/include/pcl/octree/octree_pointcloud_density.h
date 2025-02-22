@@ -50,7 +50,7 @@ namespace octree {
 class OctreePointCloudDensityContainer : public OctreeContainerBase {
 public:
   /** \brief Class initialization. */
-  OctreePointCloudDensityContainer() : point_counter_(0) {}
+  OctreePointCloudDensityContainer() = default;
 
   /** \brief Empty class deconstructor. */
   ~OctreePointCloudDensityContainer() override = default;
@@ -68,7 +68,7 @@ public:
   bool
   operator==(const OctreeContainerBase& other) const override
   {
-    const OctreePointCloudDensityContainer* otherContainer =
+    const auto* otherContainer =
         dynamic_cast<const OctreePointCloudDensityContainer*>(&other);
 
     return (this->point_counter_ == otherContainer->point_counter_);
@@ -76,7 +76,11 @@ public:
 
   /** \brief Read input data. Only an internal counter is increased.
    */
-  void addPointIndex(uindex_t) { point_counter_++; }
+  void
+  addPointIndex(index_t) override
+  {
+    point_counter_++;
+  }
 
   /** \brief Return point counter.
    * \return Amount of points
@@ -95,7 +99,7 @@ public:
   }
 
 private:
-  uindex_t point_counter_;
+  uindex_t point_counter_{0};
 };
 
 /** \brief @b Octree pointcloud density class
