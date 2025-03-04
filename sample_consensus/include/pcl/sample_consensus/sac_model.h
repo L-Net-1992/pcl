@@ -47,6 +47,7 @@
 #include <boost/random/mersenne_twister.hpp> // for mt19937
 #include <boost/random/uniform_int.hpp> // for uniform_int
 #include <boost/random/variate_generator.hpp> // for variate_generator
+#include <random>
 
 #include <pcl/memory.h>
 #include <pcl/console/print.h>
@@ -92,7 +93,7 @@ namespace pcl
       {
         // Create a random number generator object
         if (random)
-          rng_alg_.seed (static_cast<unsigned> (std::time(nullptr)));
+          rng_alg_.seed (std::random_device()());
         else
           rng_alg_.seed (12345u);
 
@@ -114,7 +115,7 @@ namespace pcl
         , custom_model_constraints_ ([](auto){return true;})
       {
         if (random)
-          rng_alg_.seed (static_cast<unsigned> (std::time (nullptr)));
+          rng_alg_.seed (std::random_device()());
         else
           rng_alg_.seed (12345u);
 
@@ -143,7 +144,7 @@ namespace pcl
         , custom_model_constraints_ ([](auto){return true;})
       {
         if (random)
-          rng_alg_.seed (static_cast<unsigned> (std::time(nullptr)));
+          rng_alg_.seed (std::random_device()());
         else
           rng_alg_.seed (12345u);
 
@@ -472,7 +473,7 @@ namespace pcl
           // elements, that does not matter (and nowadays, random number generators are good)
           //std::swap (shuffled_indices_[i], shuffled_indices_[i + (rand () % (index_size - i))]);
           std::swap (shuffled_indices_[i], shuffled_indices_[i + (rnd () % (index_size - i))]);
-        std::copy (shuffled_indices_.begin (), shuffled_indices_.begin () + sample_size, sample.begin ());
+        std::copy (shuffled_indices_.cbegin (), shuffled_indices_.cbegin () + sample_size, sample.begin ());
       }
 
       /** \brief Fills a sample array with one random sample from the indices_ vector
@@ -513,7 +514,7 @@ namespace pcl
             shuffled_indices_[i] = indices[i-1];
         }
 
-        std::copy (shuffled_indices_.begin (), shuffled_indices_.begin () + sample_size, sample.begin ());
+        std::copy (shuffled_indices_.cbegin (), shuffled_indices_.cbegin () + sample_size, sample.begin ());
       }
 
       /** \brief Check whether a model is valid given the user constraints.
@@ -618,7 +619,7 @@ namespace pcl
       using ConstPtr = shared_ptr<const SampleConsensusModelFromNormals<PointT, PointNT> >;
 
       /** \brief Empty constructor for base SampleConsensusModelFromNormals. */
-      SampleConsensusModelFromNormals () : normal_distance_weight_ (0.0), normals_ () {};
+      SampleConsensusModelFromNormals () :  normals_ () {};
 
       /** \brief Destructor. */
       virtual ~SampleConsensusModelFromNormals () = default;
@@ -662,7 +663,7 @@ namespace pcl
       /** \brief The relative weight (between 0 and 1) to give to the angular
         * distance (0 to pi/2) between point normals and the plane normal. 
         */
-      double normal_distance_weight_;
+      double normal_distance_weight_{0.0};
 
       /** \brief A pointer to the input dataset that contains the point normals
         * of the XYZ dataset. 

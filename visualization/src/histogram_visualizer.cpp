@@ -46,7 +46,6 @@
 #include <vtkVersion.h>
 #include <vtkDoubleArray.h>
 #include <vtkTextProperty.h>
-#include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
 #include <vtkDataObject.h>
 #include <vtkProperty2D.h>
@@ -57,8 +56,7 @@ using namespace std::chrono_literals;
 //////////////////////////////////////////////////////////////////////////////////////////////
 pcl::visualization::PCLHistogramVisualizer::PCLHistogramVisualizer () : 
   exit_main_loop_timer_callback_ (vtkSmartPointer<ExitMainLoopTimerCallback>::New ()), 
-  exit_callback_ (vtkSmartPointer<ExitCallback>::New ()), 
-  stopped_ ()
+  exit_callback_ (vtkSmartPointer<ExitCallback>::New ())
 {
 }
 
@@ -289,7 +287,7 @@ pcl::visualization::PCLHistogramVisualizer::addFeatureHistogram (
     return (false);
   }
 
-  RenWinInteractMap::iterator am_it = wins_.find (id);
+  auto am_it = wins_.find (id);
   if (am_it != wins_.end ())
   {
     PCL_WARN ("[addFeatureHistogram] A window with id <%s> already exists! Please choose a different id and retry.\n", id.c_str ());
@@ -341,7 +339,7 @@ pcl::visualization::PCLHistogramVisualizer::addFeatureHistogram (
     return (false);
   }
 
-  RenWinInteractMap::iterator am_it = wins_.find (id);
+  auto am_it = wins_.find (id);
   if (am_it != wins_.end ())
   {
     PCL_ERROR ("[addFeatureHistogram] A window with id <%s> already exists! Please choose a different id and retry.\n", id.c_str ());
@@ -382,7 +380,7 @@ pcl::visualization::PCLHistogramVisualizer::updateFeatureHistogram (
     const pcl::PCLPointCloud2 &cloud, const std::string &field_name,
     const std::string &id)
 {
-  RenWinInteractMap::iterator am_it = wins_.find (id);
+  auto am_it = wins_.find (id);
   if (am_it == wins_.end ())
   {
     PCL_WARN ("[updateFeatureHistogram] A window with id <%s> does not exists!.\n", id.c_str ());
@@ -428,7 +426,7 @@ pcl::visualization::PCLHistogramVisualizer::updateFeatureHistogram (
     PCL_ERROR ("[updateFeatureHistogram] Invalid point index (%d) given!\n", index);
     return (false);
   }
-  RenWinInteractMap::iterator am_it = wins_.find (id);
+  auto am_it = wins_.find (id);
   if (am_it == wins_.end ())
   {
     PCL_WARN ("[updateFeatureHistogram] A window with id <%s> does not exists!.\n", id.c_str ());

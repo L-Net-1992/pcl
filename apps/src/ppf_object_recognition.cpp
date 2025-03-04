@@ -9,13 +9,14 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/visualization/pcl_visualizer.h>
 
+#include <chrono>
 #include <thread>
 
 using namespace pcl;
 using namespace std::chrono_literals;
 
 const Eigen::Vector4f subsampling_leaf_size(0.02f, 0.02f, 0.02f, 0.0f);
-const float normal_estimation_search_radius = 0.05f;
+constexpr float normal_estimation_search_radius = 0.05f;
 
 PointCloud<PointNormal>::Ptr
 subsampleAndCalculateNormals(const PointCloud<PointXYZ>::Ptr& cloud)

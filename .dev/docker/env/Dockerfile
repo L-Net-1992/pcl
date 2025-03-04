@@ -2,7 +2,7 @@ ARG UBUNTU_VERSION=20.04
 
 FROM "ubuntu:${UBUNTU_VERSION}"
 
-# Eigen patch (https://eigen.tuxfamily.org/bz/show_bug.cgi?id=1462) to fix issue metioned
+# Eigen patch (https://eigen.tuxfamily.org/bz/show_bug.cgi?id=1462) to fix issue mentioned
 # in https://github.com/PointCloudLibrary/pcl/issues/3729 is available in Eigen 3.3.7.
 # Not needed from 20.04 since it is the default version from apt
 ARG EIGEN_MINIMUM_VERSION=3.3.7
@@ -14,7 +14,7 @@ ARG ENSENSOSDK_VERSION=3.2.489
 ARG REALSENSE_VERSION=2.50.0
 
 # Check https://packages.ubuntu.com/search?suite=all&arch=any&searchon=names&keywords=libvtk%20qt-dev
-# for available packes for choosen UBUNTU_VERSION
+# for available packages for chosen UBUNTU_VERSION
 ARG VTK_VERSION=6
 
 # Use the latest version of CMake by adding the Kitware repository if true,
@@ -28,15 +28,21 @@ RUN apt-get update \
       build-essential \
       clang \
       clang-tidy \
+      libbenchmark-dev \
       libblas-dev \
-      libboost-date-time-dev \
+      libboost-serialization-dev \
       libboost-filesystem-dev \
       libboost-iostreams-dev \
+      libboost-system-dev \
+      libcjson-dev \
       libflann-dev \
       libglew-dev \
+      freeglut3-dev \
       libgtest-dev \
+      libomp-dev \
       libopenni-dev \
       libopenni2-dev \
+      libpcap-dev \
       libproj-dev \
       libqhull-dev \
       libqt5opengl5-dev \
@@ -48,10 +54,20 @@ RUN apt-get update \
       software-properties-common \
       wget \
       xvfb \
+ && if dpkg --compare-versions $(lsb_release -sr) ge 22.04; then \
+      apt-get -V install -y libnanoflann-dev ; \
+    fi \
  && if [ "$USE_LATEST_CMAKE" = true ] ; then \
       cmake_ubuntu_version=$(lsb_release -cs) ; \
       if ! wget -q --method=HEAD "https://apt.kitware.com/ubuntu/dists/$cmake_ubuntu_version/Release"; then \
-        cmake_ubuntu_version="focal" ; \
+        ubuntu_version=$(lsb_release -sr) ; \
+        if dpkg --compare-versions ${ubuntu_version} ge 22.04; then \
+          cmake_ubuntu_version="jammy" ; \
+        elif dpkg --compare-versions ${ubuntu_version} ge 20.04; then \
+          cmake_ubuntu_version="focal" ; \
+        else \
+          cmake_ubuntu_version="bionic" ; \
+        fi ; \
       fi ; \
       wget -qO - https://apt.kitware.com/kitware-archive.sh | bash -s -- --release $cmake_ubuntu_version ; \
       apt-get update ; \
@@ -61,18 +77,6 @@ RUN apt-get update \
        apt-get -V install -y nvidia-cuda-toolkit g++-6 ; \
      else \
        apt-get -V install -y nvidia-cuda-toolkit-gcc ; \
-     fi \
- && if [ "$(lsb_release -sr)" = "21.10" ]; then \
-       wget -qO- https://github.com/google/benchmark/archive/refs/tags/v1.6.1.tar.gz | tar xz \
-       && cd benchmark-1.6.1 \
-       && mkdir build \
-       && cd build \
-       && cmake .. -DCMAKE_BUILD_TYPE=Release -DBENCHMARK_ENABLE_GTEST_TESTS=OFF -DBENCHMARK_ENABLE_TESTING=OFF \
-       && make -j$(nproc) install \
-       && cd ../.. \
-       && rm -rf benchmark-1.6.1 ; \
-     else \
-       apt-get -V install -y libbenchmark-dev ; \
      fi \
  && rm -rf /var/lib/apt/lists/*
 

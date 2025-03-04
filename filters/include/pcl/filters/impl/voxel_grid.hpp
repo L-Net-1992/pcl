@@ -59,6 +59,11 @@ pcl::getMinMax3D (const typename pcl::PointCloud<PointT>::ConstPtr &cloud,
   // Get the fields list and the distance field index
   std::vector<pcl::PCLPointField> fields;
   int distance_idx = pcl::getFieldIndex<PointT> (distance_field_name, fields);
+  if (distance_idx < 0 || fields.empty()) {
+    PCL_ERROR ("[pcl::getMinMax3D] Could not find field with name '%s'!\n", distance_field_name.c_str());
+    return;
+  }
+  const auto field_offset = fields[distance_idx].offset;
 
   float distance_value;
   // If dense, no need to check for NaNs
@@ -67,8 +72,8 @@ pcl::getMinMax3D (const typename pcl::PointCloud<PointT>::ConstPtr &cloud,
     for (const auto& point: *cloud)
     {
       // Get the distance value
-      const std::uint8_t* pt_data = reinterpret_cast<const std::uint8_t*> (&point);
-      memcpy (&distance_value, pt_data + fields[distance_idx].offset, sizeof (float));
+      const auto* pt_data = reinterpret_cast<const std::uint8_t*> (&point);
+      memcpy (&distance_value, pt_data + field_offset, sizeof (float));
 
       if (limit_negative)
       {
@@ -93,8 +98,8 @@ pcl::getMinMax3D (const typename pcl::PointCloud<PointT>::ConstPtr &cloud,
     for (const auto& point: *cloud)
     {
       // Get the distance value
-      const std::uint8_t* pt_data = reinterpret_cast<const std::uint8_t*> (&point);
-      memcpy (&distance_value, pt_data + fields[distance_idx].offset, sizeof (float));
+      const auto* pt_data = reinterpret_cast<const std::uint8_t*> (&point);
+      memcpy (&distance_value, pt_data + field_offset, sizeof (float));
 
       if (limit_negative)
       {
@@ -136,6 +141,11 @@ pcl::getMinMax3D (const typename pcl::PointCloud<PointT>::ConstPtr &cloud,
   // Get the fields list and the distance field index
   std::vector<pcl::PCLPointField> fields;
   int distance_idx = pcl::getFieldIndex<PointT> (distance_field_name, fields);
+  if (distance_idx < 0 || fields.empty()) {
+    PCL_ERROR ("[pcl::getMinMax3D] Could not find field with name '%s'!\n", distance_field_name.c_str());
+    return;
+  }
+  const auto field_offset = fields[distance_idx].offset;
 
   float distance_value;
   // If dense, no need to check for NaNs
@@ -144,8 +154,8 @@ pcl::getMinMax3D (const typename pcl::PointCloud<PointT>::ConstPtr &cloud,
     for (const auto &index : indices)
     {
       // Get the distance value
-      const std::uint8_t* pt_data = reinterpret_cast<const std::uint8_t*> (&(*cloud)[index]);
-      memcpy (&distance_value, pt_data + fields[distance_idx].offset, sizeof (float));
+      const auto* pt_data = reinterpret_cast<const std::uint8_t*> (&(*cloud)[index]);
+      memcpy (&distance_value, pt_data + field_offset, sizeof (float));
 
       if (limit_negative)
       {
@@ -170,8 +180,8 @@ pcl::getMinMax3D (const typename pcl::PointCloud<PointT>::ConstPtr &cloud,
     for (const auto &index : indices)
     {
       // Get the distance value
-      const std::uint8_t* pt_data = reinterpret_cast<const std::uint8_t*> (&(*cloud)[index]);
-      memcpy (&distance_value, pt_data + fields[distance_idx].offset, sizeof (float));
+      const auto* pt_data = reinterpret_cast<const std::uint8_t*> (&(*cloud)[index]);
+      memcpy (&distance_value, pt_data + field_offset, sizeof (float));
 
       if (limit_negative)
       {
@@ -200,16 +210,6 @@ pcl::getMinMax3D (const typename pcl::PointCloud<PointT>::ConstPtr &cloud,
   min_pt = min_p;
   max_pt = max_p;
 }
-
-struct cloud_point_index_idx 
-{
-  unsigned int idx;
-  unsigned int cloud_point_index;
-
-  cloud_point_index_idx() = default;
-  cloud_point_index_idx (unsigned int idx_, unsigned int cloud_point_index_) : idx (idx_), cloud_point_index (cloud_point_index_) {}
-  bool operator < (const cloud_point_index_idx &p) const { return (idx < p.idx); }
-};
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointT> void
@@ -263,7 +263,7 @@ pcl::VoxelGrid<PointT>::applyFilter (PointCloud &output)
   divb_mul_ = Eigen::Vector4i (1, div_b_[0], div_b_[0] * div_b_[1], 0);
 
   // Storage for mapping leaf and pointcloud indexes
-  std::vector<cloud_point_index_idx> index_vector;
+  std::vector<internal::cloud_point_index_idx> index_vector;
   index_vector.reserve (indices_->size ());
 
   // If we don't want to process the entire cloud, but rather filter points far away from the viewpoint first...
@@ -272,8 +272,11 @@ pcl::VoxelGrid<PointT>::applyFilter (PointCloud &output)
     // Get the distance field index
     std::vector<pcl::PCLPointField> fields;
     int distance_idx = pcl::getFieldIndex<PointT> (filter_field_name_, fields);
-    if (distance_idx == -1)
-      PCL_WARN ("[pcl::%s::applyFilter] Invalid filter field name. Index is %d.\n", getClassName ().c_str (), distance_idx);
+    if (distance_idx == -1) {
+      PCL_ERROR ("[pcl::%s::applyFilter] Invalid filter field name (%s).\n", getClassName ().c_str (), filter_field_name_.c_str());
+      return;
+    }
+    const auto field_offset = fields[distance_idx].offset;
 
     // First pass: go over all points and insert them into the index_vector vector
     // with calculated idx. Points with the same idx value will contribute to the
@@ -286,9 +289,9 @@ pcl::VoxelGrid<PointT>::applyFilter (PointCloud &output)
           continue;
 
       // Get the distance value
-      const std::uint8_t* pt_data = reinterpret_cast<const std::uint8_t*> (&(*input_)[index]);
+      const auto* pt_data = reinterpret_cast<const std::uint8_t*> (&(*input_)[index]);
       float distance_value = 0;
-      memcpy (&distance_value, pt_data + fields[distance_idx].offset, sizeof (float));
+      memcpy (&distance_value, pt_data + field_offset, sizeof (float));
 
       if (filter_limit_negative_)
       {
@@ -337,7 +340,7 @@ pcl::VoxelGrid<PointT>::applyFilter (PointCloud &output)
 
   // Second pass: sort the index_vector vector using value representing target cell as index
   // in effect all points belonging to the same output cell will be next to each other
-  auto rightshift_func = [](const cloud_point_index_idx &x, const unsigned offset) { return x.idx >> offset; };
+  auto rightshift_func = [](const internal::cloud_point_index_idx &x, const unsigned offset) { return x.idx >> offset; };
   boost::sort::spreadsort::integer_sort(index_vector.begin(), index_vector.end(), rightshift_func);
   
   // Third pass: count output cells
